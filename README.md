@@ -12,7 +12,7 @@ Usage information:
       arguments:        -s    serial, not parallel search.
                         path  the path to search. default is current directory.
       e.g.:   tailzero
-      e.g.:   tailzero c:\foo
-      e.g.:   tailzero -s c:\foo
-      e.g.:   tailzero \\server\share♀older
+              tailzero c:\foo
+              tailzero -s c:\foo
+              tailzero \\server\share♀older
 

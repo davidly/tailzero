@@ -131,7 +131,7 @@ int wmain( int argc, WCHAR * argv[] )
     {
         if ( '-' == argv[i][0] || '/' == argv[i][0] )
         {
-            char a = argv[i][1];
+            WCHAR a = argv[i][1];
 
             if ( 's' == a )
                 parallel = false;

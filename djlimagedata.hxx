@@ -364,7 +364,7 @@ private:
         return IsPerhapsAnImageHeader( x );
     } //IsPerhapsAnImage
 
-    void EnumerateGPSTags( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateGPSTags( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         if ( 0xffffffff == IFDOffset )
             return;
@@ -455,7 +455,7 @@ private:
             g_Longitude = -g_Longitude;
     } //EnumerateGPSTags
     
-    void EnumerateNikonPreviewIFD( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateNikonPreviewIFD( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         vector<IFDHeader> aHeaders( MaxIFDHeaders );
         __int64 provisionalOffset = 0;
@@ -497,7 +497,7 @@ private:
         }
     } //EnumerateNikonPreviewIFD
     
-    void EnumerateNikonMakernotes( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateNikonMakernotes( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         // https://www.exiv2.org/tags-nikon.html
     
@@ -531,7 +531,7 @@ private:
                     // This "original - 8" in originalNikonMakernotesOffset is clearly a hack. But it woks on images from the D300, D70, and D100
                     // Note it's needed to correctly compute both the preview IFD start and the embedded JPG preview start
     
-                    EnumerateNikonPreviewIFD( depth + 1, head.offset, originalNikonMakernotesOffset + headerBase, littleEndian );
+                    EnumerateNikonPreviewIFD( head.offset, originalNikonMakernotesOffset + headerBase, littleEndian );
                 }
             }
     
@@ -539,7 +539,7 @@ private:
         }
     } //EnumerateNikonMakernotes
     
-    void EnumerateOlympusCameraSettingsIFD( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateOlympusCameraSettingsIFD( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         bool previewIsValid = false;
         vector<IFDHeader> aHeaders( MaxIFDHeaders );
@@ -580,7 +580,7 @@ private:
         }
     } //EnumerateOlympusCameraSettingsIFD
     
-    void EnumerateFujifilmMakernotes( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateFujifilmMakernotes( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         // https://www.exiv2.org/tags-fujifilm.html
     
@@ -642,7 +642,7 @@ private:
         }
     } //DetectGarbage
 
-    void EnumeratePanasonicMakernotes( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumeratePanasonicMakernotes( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         vector<IFDHeader> aHeaders( MaxIFDHeaders );
     
@@ -691,7 +691,7 @@ private:
         }
     } //EnumeratePanasonicMakernotes
 
-    void EnumerateMakernotes( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateMakernotes( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         __int64 originalIFDOffset = IFDOffset;
     
@@ -721,7 +721,7 @@ private:
             IFDOffset += 8;
             isNikon = true;
     
-            EnumerateNikonMakernotes( depth, IFDOffset, headerBase, littleEndian );
+            EnumerateNikonMakernotes( IFDOffset, headerBase, littleEndian );
             return;
         }
         if ( !strcmp( g_acMake, "Nikon" ) )
@@ -735,7 +735,7 @@ private:
             IFDOffset += 8;
             isNikon = true;
     
-            EnumerateNikonMakernotes( depth, IFDOffset, headerBase, littleEndian );
+            EnumerateNikonMakernotes( IFDOffset, headerBase, littleEndian );
             return;
         }
         if ( !strcmp( g_acMake, "NIKON" ) )
@@ -749,7 +749,7 @@ private:
             IFDOffset += 8;
             isNikon = true;
     
-            EnumerateNikonMakernotes( depth, IFDOffset, headerBase, littleEndian );
+            EnumerateNikonMakernotes( IFDOffset, headerBase, littleEndian );
             return;
         }
         else if ( !strcmp( g_acMake, "LEICA CAMERA AG" ) )
@@ -799,7 +799,7 @@ private:
             IFDOffset += 12;
             isFujifilm = true;
     
-            EnumerateFujifilmMakernotes( depth, IFDOffset, headerBase, littleEndian );
+            EnumerateFujifilmMakernotes( IFDOffset, headerBase, littleEndian );
             return;
         }
         else if ( !strcmp( g_acMake, "Panasonic" ) )
@@ -807,7 +807,7 @@ private:
             IFDOffset += 12;
             isPanasonic = true;
 
-            EnumeratePanasonicMakernotes( depth, IFDOffset, headerBase, littleEndian );
+            EnumeratePanasonicMakernotes( IFDOffset, headerBase, littleEndian );
             return;
         }
         else if ( !strcmp( g_acMake, "Apple" ) )
@@ -879,7 +879,7 @@ private:
                         sprintf_s( g_acSerialNumber, _countof( g_acSerialNumber ), "%u", head.offset );
                         //tracer.Trace( "canon makernote serial number: %s\n", g_acSerialNumber );
                     }
-                }
+                }                         
                 else if ( 224 == head.id && 17 == head.count )
                 {
                     struct SensorData
@@ -920,7 +920,7 @@ private:
                 }
                 else if ( 8224 == head.id && 13 == head.type && isOlympus )
                 {
-                    EnumerateOlympusCameraSettingsIFD( depth + 1, head.offset, originalIFDOffset + headerBase, littleEndian );
+                    EnumerateOlympusCameraSettingsIFD( head.offset, originalIFDOffset + headerBase, littleEndian );
                 }
             }
     
@@ -928,7 +928,7 @@ private:
         }
     } //EnumerateMakernotes
     
-    void EnumerateExifTags( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateExifTags( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         DWORD XResolutionNum = 0;
         DWORD XResolutionDen = 0;
@@ -1003,7 +1003,7 @@ private:
                 }
                 else if ( 37500 == head.id )
                 {
-                    EnumerateMakernotes( depth + 1, head.offset, headerBase, littleEndian );
+                    EnumerateMakernotes( head.offset, headerBase, littleEndian );
                 }
                 else if ( 40962 == head.id )
                 {
@@ -1112,7 +1112,7 @@ private:
         }
     } //EnumerateExifTags
 
-    void EnumerateGenericIFD( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian )
+    void EnumerateGenericIFD( __int64 IFDOffset, __int64 headerBase, bool littleEndian )
     {
         __int64 provisionalJPGOffset = 0;
         __int64 provisionalJPGFromRAWOffset = 0;
@@ -1191,7 +1191,8 @@ private:
         }
     } //EnumerateGenericIFD
     
-    void GetPanasonicIFD0Tag( int depth, WORD tagID, WORD tagType, DWORD tagCount, DWORD tagOffset, __int64 headerBase, bool littleEndian, __int64 IFDOffset )
+#pragma warning( disable: 4100 ) // unreference formal parameters
+    void GetPanasonicIFD0Tag( WORD tagID, WORD tagType, DWORD tagCount, DWORD tagOffset, __int64 headerBase, bool littleEndian, __int64 IFDOffset )
     {
         if ( 2 == tagID )
         {
@@ -1211,6 +1212,7 @@ private:
             g_Embedded_Image_Length = tagCount;
         }
     } //GetPanasonicIFD0Tag
+#pragma warning( default: 4100 ) // unreference formal parameters
     
     void EnumerateFlac()
     {
@@ -1800,7 +1802,7 @@ private:
         EnumerateBoxes( hs, 0 );
     } //EnumerateHeif
     
-    void EnumerateIFD0( int depth, __int64 IFDOffset, __int64 headerBase, bool littleEndian, WCHAR const * pwcExt )
+    void EnumerateIFD0( __int64 IFDOffset, __int64 headerBase, bool littleEndian, WCHAR const * pwcExt )
     {
         int currentIFD = 0;
         __int64 provisionalJPGOffset = 0;
@@ -1830,7 +1832,7 @@ private:
 
                 if ( ( !_wcsicmp( pwcExt, L".rw2" ) ) && ( ( head.id < 254 ) || ( head.id >= 280 && head.id <= 290 ) ) )
                 {
-                    GetPanasonicIFD0Tag( depth, head.id, head.type, head.count, head.offset, headerBase, littleEndian, IFDOffset );
+                    GetPanasonicIFD0Tag( head.id, head.type, head.count, head.offset, headerBase, littleEndian, IFDOffset );
                     continue;
                 }
     
@@ -1906,13 +1908,13 @@ private:
                 else if ( 330 == head.id && 4 == head.type )
                 {
                     if ( 1 == head.count )
-                        EnumerateGenericIFD( depth + 1, head.offset, headerBase, littleEndian );
+                        EnumerateGenericIFD( head.offset, headerBase, littleEndian );
                     else
                     {
                         for ( size_t item = 0; item < head.count; item++ )
                         {
                             DWORD oIFD = GetDWORD( ( item * 4 ) + head.offset + headerBase, littleEndian );
-                            EnumerateGenericIFD( depth + 1, oIFD, headerBase, littleEndian );
+                            EnumerateGenericIFD( oIFD, headerBase, littleEndian );
                         }
                     }
                 }
@@ -1948,11 +1950,11 @@ private:
                 }
                 else if ( 34665 == head.id )
                 {
-                    EnumerateExifTags( depth + 1, head.offset, headerBase, littleEndian );
+                    EnumerateExifTags( head.offset, headerBase, littleEndian );
                 }
                 else if ( 34853 == head.id )
                 {
-                    EnumerateGPSTags( depth + 1, head.offset, headerBase, littleEndian );
+                    EnumerateGPSTags( head.offset, headerBase, littleEndian );
                 }
                 else if ( 41989 == head.id && IsIntType( head.type ) )
                 {
@@ -1976,7 +1978,7 @@ private:
                 {
                     // Sony and Ricoh Makernotes (in addition to makernotes stored in Exif IFD)
     
-                    EnumerateMakernotes( depth + 1, head.offset, headerBase, littleEndian );
+                    EnumerateMakernotes( head.offset, headerBase, littleEndian );
                 }
             }
     
@@ -2090,13 +2092,13 @@ private:
                 GetBytes( (__int64) offset + 4, app1Header, 4 );
                 app1Header[4] = 0;
     
-                if ( !stricmp( app1Header, "exif" ) )
+                if ( !_stricmp( app1Header, "exif" ) )
                 {
                     // just return the exifoffset so it can be parsed later
 
                     exifOffset = offset + 8;
                 }
-                else if ( !stricmp( app1Header, "http" ) )
+                else if ( !_stricmp( app1Header, "http" ) )
                 {
                     // there will be a null-terminated header string then another string with xmp data
     
@@ -2813,9 +2815,9 @@ private:
     
         DWORD IFDOffset = GetDWORD( startingOffset, littleEndian );
     
-        EnumerateIFD0( 0, IFDOffset, headerBase, littleEndian, pwcExt );
+        EnumerateIFD0( IFDOffset, headerBase, littleEndian, pwcExt );
     
-        if ( ( 0 != g_Embedded_Image_Offset ) && ( 0 != g_Embedded_Image_Length ) && !wcsicmp( pwcExt, L".rw2" )  )
+        if ( ( 0 != g_Embedded_Image_Offset ) && ( 0 != g_Embedded_Image_Length ) && !_wcsicmp( pwcExt, L".rw2" )  )
         {
             // Panasonic raw files sometimes have embedded JPGs with metadata not in the actual RW2 file.
             // Specifically, Serial Number, Lens Model, and Lens Serial Number can only be retrieved in this way.
@@ -2854,7 +2856,7 @@ private:
                     littleEndian = ( 0x4949 == ( header & 0xffff ) );
     
                     DWORD IFDStartingOffset = GetDWORD( startingOffset, littleEndian );
-                    EnumerateIFD0( 0, IFDStartingOffset, headerBase, littleEndian, pwcExt );
+                    EnumerateIFD0( IFDStartingOffset, headerBase, littleEndian, pwcExt );
                 }
             }
         }
@@ -2863,21 +2865,21 @@ private:
         {
             WORD endian = GetWORD( g_Canon_CR3_Exif_Exif_IFD, littleEndian );
     
-            EnumerateExifTags( 0, 8, g_Canon_CR3_Exif_Exif_IFD, ( 0x4949 == endian ) );
+            EnumerateExifTags( 8, g_Canon_CR3_Exif_Exif_IFD, ( 0x4949 == endian ) );
         }
     
         if ( 0 != g_Canon_CR3_Exif_Makernotes_IFD )
         {
             WORD endian = GetWORD( g_Canon_CR3_Exif_Makernotes_IFD, littleEndian );
     
-            EnumerateMakernotes( 0, 8, g_Canon_CR3_Exif_Makernotes_IFD, ( 0x4949 == endian ) );
+            EnumerateMakernotes( 8, g_Canon_CR3_Exif_Makernotes_IFD, ( 0x4949 == endian ) );
         }
     
         if ( 0 != g_Canon_CR3_Exif_GPS_IFD  )
         {
             WORD endian = GetWORD( g_Canon_CR3_Exif_GPS_IFD, littleEndian );
     
-            EnumerateGPSTags( 0, 8, g_Canon_CR3_Exif_GPS_IFD, ( 0x4949 == endian ) );
+            EnumerateGPSTags( 8, g_Canon_CR3_Exif_GPS_IFD, ( 0x4949 == endian ) );
         }
 
         // If there is an embedded file, load and treat it as if it's the main image.

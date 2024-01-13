@@ -7,6 +7,12 @@ Files can end up this way if a copy is interrupted or if networking hardware is 
 
 Usage information:
 
-    usage: tailzero <path>
-      looks for files with zero tails indicating potential corruption
+    usage: tailzero [-s] <path>
+      looks for files with zero tails indicating potential corruption.
+      arguments:        -s    serial, not parallel search.
+                        path  the path to search. default is current directory.
+      e.g.:   tailzero
+      e.g.:   tailzero c:\foo
+      e.g.:   tailzero -s c:\foo
+      e.g.:   tailzero \\server\share♀older
 

@@ -3,7 +3,7 @@
 // But it's often true that when copying files, errors result in partial copies and zeroes at the end of files.
 
 #define _CRT_SECURE_NO_WARNINGS
-#define PARALLEL_EXECITION
+#define PARALLEL_EXECUTION
 
 #include <windows.h>
 

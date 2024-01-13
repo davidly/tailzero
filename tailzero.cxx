@@ -46,6 +46,17 @@ class XHandle
         ~XHandle() { if ( ( INVALID_HANDLE_VALUE != _h ) && ( 0 != _h ) ) CloseHandle( _h ); }
 };
 
+const WCHAR * LastErrorString()
+{
+    static WCHAR awc[ MAX_PATH ];
+    FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM, 0, GetLastError(), 0, awc, _countof( awc ), 0 );
+    size_t len = wcslen( awc );
+    for ( size_t i = 0; i < len; i++ )
+        if ( L'\r' == awc[ i ] || L'\n' == awc[ i ] )
+            awc[ i ] = 0;
+    return awc;
+} //LastErrorString
+
 void search_folder( const WCHAR * pwc, size_t & found )
 {
     byte buf[ tailLen ];
@@ -82,27 +93,32 @@ void search_folder( const WCHAR * pwc, size_t & found )
                         {
                             lock_guard<mutex> lock( g_mtx );
                             found++;
-                            printf( "the last %lu bytes are zero: %ws\n", toCheck, pwc );
+                            printf( "the last %4lu bytes are zero: %ws\n", toCheck, pwc );
                         }
                     }
                     else
                     {
                         lock_guard<mutex> lock( g_mtx );
-                        printf( "can't read from file %ws, error %d\n", pwc, GetLastError() );
+                        printf( "error %d %ws -- can't read %ld bytes from file %ws\n", GetLastError(), LastErrorString(), toCheck, pwc );
                     }
                 }
                 else
                 {
                     lock_guard<mutex> lock( g_mtx );
-                    printf( "can't seek to %ld bytes from end of file, error %d\n", toCheck, GetLastError() );
+                    printf( "can't seek to %ld bytes from end of file, error %d %ws\n", toCheck, GetLastError(), LastErrorString() );
                 }
             }
         }
         else
         {
             lock_guard<mutex> lock( g_mtx );
-            printf( "can't get file length for file %ws, error %d\n", pwc, GetLastError() );
+            printf( "can't get file length for file %ws, error %d %ws\n", pwc, GetLastError(), LastErrorString() );
         }
+    }
+    else
+    {
+        lock_guard<mutex> lock( g_mtx );
+        printf( "can't open file %ws, error %d %ws\n", pwc, GetLastError(), LastErrorString() );
     }
 } //search_folder
 
@@ -129,9 +145,30 @@ int wmain( int argc, WCHAR * argv[] )
             path = argv[i];
     }
 
+    WCHAR fullPath[ MAX_PATH ];
+    DWORD result = GetFullPathName( path, _countof( fullPath ), fullPath, 0 );
+    if ( 0 == result )
+    {
+        printf( "error %d %ws -- unable to get full path for %ws\n", GetLastError(), LastErrorString(), path );
+        usage();
+    }
+
+    result = GetFileAttributes( fullPath );
+    if ( INVALID_FILE_ATTRIBUTES == result )
+    {
+        printf( "error %d %ws -- can't find path %ws\n", GetLastError(), LastErrorString(), fullPath );
+        usage();
+    }
+
+    if ( ! ( result & FILE_ATTRIBUTE_DIRECTORY ) )
+    {
+        printf( "error -- path isn't a directory: %ws\n", fullPath );
+        usage();
+    }
+
     CPathArray paths;
     CEnumFolder enumerate( true, &paths, 0, 0 );
-    enumerate.Enumerate( path, 0 );
+    enumerate.Enumerate( fullPath, 0 );
 
     if ( 0 == paths.Count() )
     {
@@ -141,7 +178,7 @@ int wmain( int argc, WCHAR * argv[] )
 
     size_t found = 0;
     size_t cPaths = paths.Count();
-    printf( "looking at %zu files\n", cPaths );
+    printf( "looking at %zu files in folder %ws\n", cPaths, fullPath );
 
     if ( parallel )
     {
@@ -156,5 +193,5 @@ int wmain( int argc, WCHAR * argv[] )
             search_folder( paths.Get( i ), found );
     }
 
-    printf( "found %zu files with a zero tail out of %llu\n", found, cPaths );
-} //main
+    printf( "found %zu files with a zero tail out of %zu\n", found, cPaths );
+} //wmain

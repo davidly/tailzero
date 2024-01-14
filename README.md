@@ -9,10 +9,11 @@ Usage information:
 
     usage: tailzero [-s] <path>
       looks for files with zero tails indicating potential corruption.
-      arguments:        -s    serial, not parallel search.
+      arguments:        -m    mute errors including access denied.
+                        -s    single-threaded, not multi-threaded search.
                         path  the path to search. default is current directory.
       e.g.:   tailzero
               tailzero c:\foo
               tailzero -s c:\foo
-              tailzero \\server\share♀older
+              tailzero \\server\share\folder
 

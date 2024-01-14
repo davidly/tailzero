@@ -35,7 +35,7 @@ void usage()
     printf( "  e.g.:   tailzero\n" );
     printf( "          tailzero c:\\foo\n" );
     printf( "          tailzero -s c:\\foo\n" );
-    printf( "          tailzero \\\\server\\share\folder\n" );
+    printf( "          tailzero \\\\server\\share\\folder\n" );
     exit( 1 );
 } //usage
 

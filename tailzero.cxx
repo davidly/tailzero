@@ -23,7 +23,8 @@ using namespace concurrency;
 CDJLTrace tracer;
 static std::mutex g_mtx;
 static bool muteErrors = false;
-const LONGLONG tailLen = 8192;
+const LONGLONG maxTailLen = 16384;
+LONGLONG tailLen = 8192;
 
 void usage()
 {
@@ -31,6 +32,7 @@ void usage()
     printf( "  looks for files with zero tails indicating potential corruption.\n" );
     printf( "  arguments:        -m    mute errors including access denied.\n" );
     printf( "                    -s    single-threaded, not multi-threaded search.\n" );
+    printf( "                    -t:X  tail length 1..16384. default is 8192.\n" );
     printf( "                    path  the path to search. default is current directory.\n" );
     printf( "  e.g.:   tailzero\n" );
     printf( "          tailzero c:\\foo\n" );
@@ -62,28 +64,27 @@ const WCHAR * WinErrorString( DWORD dwerr = GetLastError() )
 
 void search_folder( const WCHAR * pwc, size_t & found )
 {
-    byte buf[ tailLen ];
+    assert( tailLen <= maxTailLen );
+    assert( tailLen >= 1 );
+    byte buf[ maxTailLen ];
     HANDLE h = CreateFile( pwc, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0, OPEN_EXISTING, 0, 0 );
     if ( INVALID_HANDLE_VALUE != h )
     {
         XHandle xh( h );
         LARGE_INTEGER fileSize;
-        BOOL ok = GetFileSizeEx( h, & fileSize );
-        if ( ok )
+        if ( GetFileSizeEx( h, & fileSize ) )
         {
             if ( 0 != fileSize.QuadPart )
             {
                 LONG toCheck = (LONG) get_min( fileSize.QuadPart, tailLen );
                 LARGE_INTEGER seek;
                 seek.QuadPart = -toCheck;
-                ok = SetFilePointerEx( h, seek, 0, FILE_END );
-                if ( ok )
+                if ( SetFilePointerEx( h, seek, 0, FILE_END ) )
                 {
-                    ok = ReadFile( h, buf, toCheck, 0, 0 );
-                    if ( ok )
+                    if ( ReadFile( h, buf, toCheck, 0, 0 ) )
                     {
                         bool allZero = true;
-                        for ( long b = 0; b < toCheck; b++ )
+                        for ( LONG b = 0; b < toCheck; b++ )
                         {
                             if ( 0 != buf[ b ] )
                             {
@@ -144,6 +145,21 @@ int wmain( int argc, WCHAR * argv[] )
                 muteErrors = true;
             else if ( 's' == a )
                 parallel = false;
+            else if ( 't' == a )
+            {
+                if ( ':' != argv[i][2] )
+                {
+                    printf( "missing colon in tail length argument\n" );
+                    usage();
+                }
+
+                tailLen = wcstoull( argv[i] + 3, 0, 10 );
+                if ( tailLen < 1 || tailLen > maxTailLen )
+                {
+                    printf( "invalid tail length specified: %lld\n", tailLen );
+                    usage();
+                }
+            }
             else
             {
                 printf( "invalid argument\n" );

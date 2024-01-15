@@ -101,30 +101,30 @@ void search_folder( const WCHAR * pwc, size_t & found )
                     }
                     else if ( !muteErrors )
                     {
-                        lock_guard<mutex> lock( g_mtx );
                         DWORD dwerr = GetLastError();
+                        lock_guard<mutex> lock( g_mtx );
                         printf( "error %d %ws -- can't read %ld bytes from file %ws\n", dwerr, WinErrorString( dwerr ), toCheck, pwc );
                     }
                 }
                 else if ( !muteErrors )
                 {
-                    lock_guard<mutex> lock( g_mtx );
                     DWORD dwerr = GetLastError();
+                    lock_guard<mutex> lock( g_mtx );
                     printf( "can't seek to %ld bytes from end of file, error %d %ws\n", toCheck, dwerr, WinErrorString( dwerr ) );
                 }
             }
         }
         else if ( !muteErrors )
         {
-            lock_guard<mutex> lock( g_mtx );
             DWORD dwerr = GetLastError();
+            lock_guard<mutex> lock( g_mtx );
             printf( "can't get file length for file %ws, error %d %ws\n", pwc, dwerr, WinErrorString( dwerr ) );
         }
     }
     else if ( !muteErrors )
     {
-        lock_guard<mutex> lock( g_mtx );
         DWORD dwerr = GetLastError();
+        lock_guard<mutex> lock( g_mtx );
         printf( "can't open file %ws, error %d %ws\n", pwc, dwerr, WinErrorString( dwerr ) );
     }
 } //search_folder
